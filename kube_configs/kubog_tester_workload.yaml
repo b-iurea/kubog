@@ -1,0 +1,270 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubog-tester
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: random-crashloop
+  namespace: kubog-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: random-crashloop
+  template:
+    metadata:
+      labels:
+        app: random-crashloop
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command: ["sh", "-c", "echo 'Might crash'; [ $((RANDOM % 2)) -eq 0 ] && exit 1 || sleep 3600"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: random-liveness
+  namespace: kubog-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: random-liveness
+  template:
+    metadata:
+      labels:
+        app: random-liveness
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command: ["sh", "-c", "while true; do sleep 5; done"]
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "[ $((RANDOM % 2)) -eq 0 ] && exit 1 || exit 0"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: random-readiness
+  namespace: kubog-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: random-readiness
+  template:
+    metadata:
+      labels:
+        app: random-readiness
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command: ["sh", "-c", "while true; do sleep 5; done"]
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "[ $((RANDOM % 3)) -eq 0 ] && exit 1 || exit 0"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: random-exit-job
+  namespace: kubog-tester
+spec:
+  template:
+    spec:
+      containers:
+        - name: job
+          image: busybox
+          command: ["sh", "-c", "echo 'Running...'; sleep 3; [ $((RANDOM % 2)) -eq 0 ] && exit 1 || exit 0"]
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: random-fail-cron
+  namespace: kubog-tester
+spec:
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: cron
+              image: busybox
+              command: ["sh", "-c", "echo 'Cron running'; [ $((RANDOM % 2)) -eq 0 ] && exit 1 || exit 0"]
+          restartPolicy: Never
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: random-daemon
+  namespace: kubog-tester
+spec:
+  selector:
+    matchLabels:
+      app: daemon-random
+  template:
+    metadata:
+      labels:
+        app: daemon-random
+    spec:
+      containers:
+        - name: daemon
+          image: busybox
+          command: ["sh", "-c", "echo 'Daemon running'; sleep 3; [ $((RANDOM % 2)) -eq 0 ] && exit 1 || sleep 3600"]
+---
+# 1. Deployment che causa OOMKilled (exit code 137)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crash-oom
+  namespace: kubog-tester-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crash-oom
+  template:
+    metadata:
+      labels:
+        app: crash-oom
+    spec:
+      containers:
+      - name: memory-hog
+        image: python:3.11
+        command: ["python3", "-c"]
+        args:
+        - |
+          import time
+          import random
+          a = []
+          for _ in range(100000000):
+              a.append('x' * 10**6)  # alloc 1MB
+              if random.random() < 0.01:
+                  break
+              time.sleep(0.05)
+        resources:
+          limits:
+            memory: "50Mi"
+          requests:
+            memory: "30Mi"
+
+---
+# 2. Job che termina correttamente ma random ogni volta (exit 0)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: short-job
+  namespace: kubog-tester-2
+spec:
+  template:
+    spec:
+      containers:
+      - name: sleeper
+        image: alpine
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          sleep $((RANDOM % 300)); echo Done
+        env:
+        - name: RANDOM
+          value: "$(date +%s)"
+      restartPolicy: Never
+  backoffLimit: 4
+
+---
+# 3. Deployment con liveness probe fallita (che forza riavvio)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liveness-fail
+  namespace: kubog-tester-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: liveness-fail
+  template:
+    metadata:
+      labels:
+        app: liveness-fail
+    spec:
+      containers:
+      - name: deadman
+        image: busybox
+        args:
+        - /bin/sh
+        - -c
+        - |
+          touch /tmp/health; sleep 10; rm -f /tmp/health; sleep 3600
+        livenessProbe:
+          exec:
+            command:
+            - cat
+            - /tmp/health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 1
+
+---
+# 4. Deployment con CrashLoopBackOff intermittente
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crashloop-demo
+  namespace: kubog-tester-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crashloop-demo
+  template:
+    metadata:
+      labels:
+        app: crashloop-demo
+    spec:
+      containers:
+      - name: unstable
+        image: alpine
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          if [ $((RANDOM % 2)) -eq 0 ]; then echo crash; exit 1; else sleep 300; fi
+
+---
+# 5. Deployment che satura la CPU
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-hog
+  namespace: kubog-tester-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cpu-hog
+  template:
+    metadata:
+      labels:
+        app: cpu-hog
+    spec:
+      containers:
+      - name: cpu-burner
+        image: busybox
+        args: ["/bin/sh", "-c", "while :; do :; done"]
+        resources:
+          limits:
+            cpu: "100m"
+          requests:
+            cpu: "50m"

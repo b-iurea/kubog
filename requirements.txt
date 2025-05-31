@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 kubernetes>=32.0.0
 pandas
 matplotlib
+=======
+kubernetes>=32.0.0
+pandas
+matplotlib
+>>>>>>> 3d23ec0 (Prima versione pubblica di KuBog Pod Debugger)
