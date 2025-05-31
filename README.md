@@ -1,7 +1,7 @@
 
 ![alt text](kubog_logo_2.png)
 
-# 📦 KuBog - Kubernetes Pod Debugger & Alert System (Enterprise-Ready)
+# 📦 KuBog - Kubernetes Pod Debugger & Alert System
 
 An advanced tool to **monitor**, **analyze**, and **generate alerts** for Pods, Nodes, and API usage in Kubernetes clusters — with dynamic namespace tracking and intelligent reporting.
 
@@ -10,7 +10,7 @@ An advanced tool to **monitor**, **analyze**, and **generate alerts** for Pods, 
 ## 🚀 Quick Start
 
 ```bash
-python3 pod_debugger_safe_complete.py --context <your-context> --chaos --watch --nodes --probes --state-changes --messages --logs
+python3 kubog_v1.py --context <your-context> --chaos --watch --nodes --probes --state-changes --messages --logs
 ```
 
 ## 🔍 Main Features
@@ -31,12 +31,12 @@ python3 pod_debugger_safe_complete.py --context <your-context> --chaos --watch -
 
 Monitor a specific namespace:
 ```bash
-python3 pod_debugger_safe_complete.py --context dev --namespaces default
+python3 kubog_v1.py --context dev --namespaces default
 ```
 
 Use in-cluster ServiceAccount:
 ```bash
-python3 pod_debugger_safe_complete.py --service-account --chaos
+python3 kubog_v1.py --service-account --chaos
 ```
 
 ---
@@ -198,7 +198,7 @@ Ensure KuBog runs with permissions to **read Deployments** in your namespaces.
 
 ## 🧱 Architecture
 
-- `pod_debugger_safe_complete.py`: main logic
+- `kubog_v1.py`: main logic
 - `api_profiler.py`: wraps and times API calls
 - `api_usage_analyzer.py`: generates PNG visualizations from usage data
 - `debugger_safety_patch.py`: adds resilience to CSVs, threading, config errors
