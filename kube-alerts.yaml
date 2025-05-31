@@ -1,0 +1,91 @@
+kube-alerts:
+
+    # ── NODE EVENTS ─────────────────────────────
+  MemoryPressure:
+    enabled: true
+    notify: true
+    message: "💢 Node under memory pressure"
+    suggestion: "Investigate pods consuming too much RAM on this node"
+    min_occurrences: 1
+    within_minutes: 5
+
+  DiskPressure:
+    enabled: true
+    notify: true
+    message: "💽 Node under disk pressure"
+    suggestion: "Free up disk or expand storage on this node"
+    min_occurrences: 1
+    within_minutes: 5
+
+  NotReady:
+    enabled: true
+    notify: true
+    message: "🛑 Node not ready"
+    suggestion: "Check node status (`kubectl describe node`) and resolve readiness issues"
+    min_occurrences: 1
+    within_minutes: 5
+
+  NotSchedulable:
+    enabled: true
+    notify: true
+    message: "🚫 Node unschedulable"
+    suggestion: "Node cordoned? Uncordon if you want pods to be scheduled here. Verify if Autoscaler wants to remove the node and why it didn't work"
+    min_occurrences: 1
+    within_minutes: 5
+
+  OOM_KILLED:
+    enabled: true
+    notify: true
+    message: "💥 Pod terminato per esaurimento memoria (OOMKilled)"
+    suggestion: "Aumenta i limiti di memoria con `resources.limits.memory` nel workload."
+    min_occurrences: 3
+    within_minutes: 15
+
+  CrashLoopBackOff:
+    enabled: true
+    notify: true
+    message: "🔥 CrashLoopBackOff rilevato"
+    suggestion: "Controlla i log del container (`kubectl logs`) per identificare la causa del crash."
+    min_occurrences: 3
+    within_minutes: 15
+
+  PROBE_FAILURE:
+    enabled: true
+    notify: true
+    message: "⚠️ Probe fallita (liveness/startup)"
+    suggestion: "Verifica e regola `initialDelaySeconds`, `timeoutSeconds`, `periodSeconds` nelle probe."
+    min_occurrences: 25
+    within_minutes: 15
+
+  POD_DELETED:
+    enabled: true
+    notify: false  # Solo log, non alert
+    message: "ℹ️ Pod eliminato dal controller"
+    suggestion: "Verifica se è stato un aggiornamento legittimo o un restart imprevisto."
+    min_occurrences: 3
+    within_minutes: 15
+
+  TERMINATION:
+    enabled: true
+    notify: true
+    message: "🔁 Pod terminated (check exit code & reason)"
+    exit_code: 
+    suggestion: "Inspect logs / exit code to understand why container exited"
+    min_occurrences: 10
+    within_minutes: 15
+
+  ImagePullBackOff:
+    enabled: true
+    notify: true
+    message: "❌ Impossibile scaricare l'immagine del container"
+    suggestion: "Verifica il nome dell'immagine o le credenziali per il registry (imagePullSecrets)."
+    min_occurrences: 3
+    within_minutes: 15
+
+  Evicted:
+    enabled: true
+    notify: true
+    message: "📤 Pod sfrattato dal nodo"
+    suggestion: "Controlla l'utilizzo risorse del nodo o attiva meccanismi di autoscaling."
+    min_occurrences: 3
+    within_minutes: 15
