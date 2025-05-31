@@ -102,21 +102,14 @@ A global summary is saved every 5 minutes:
 
 ## 📡 API Usage Profiling
 
-Every API call (list/read/etc.) is profiled in `api_profile.csv` with:
-- Resource name, namespace, method, duration (ms)
-
 📈 A visual analyzer (`api_usage_analyzer.py`) runs every 5 min and saves:
 - `api_analyzer/api_calls_per_minute.png`
-![alt text](../Sviluppo/pod-monitoring/api_analyzer/api_calls_per_minute.png)
 - `api_analyzer/avg_duration_per_method.png`
-![alt text](../Sviluppo/pod-monitoring/api_analyzer/avg_duration_per_method.png)
 - `api_analyzer/top_namespaces.png`
-![alt text](../Sviluppo/pod-monitoring/api_analyzer/top_namespaces.png)
-
 
 ---
 
-## 🔔 Alert System with Microsoft Teams (Work in progress)
+## 🔔 Alert System with Microsoft Teams (Work in progress) and Email
 
 Alerts are defined in a YAML file:
 
@@ -137,13 +130,23 @@ kube-alerts:
     min_occurrences: 1
 ```
 
-📬 Alerts are sent via Microsoft Teams using an Incoming Webhook URL.
+📬 Alerts are sent via Microsoft Teams using an Incoming Webhook URL. (WORK IN PROGRESS)
 
 
 📌 The keys can be:
 - `type` (es. `OOM_KILLED`, `PROBE_FAILURE`)
 - `reason` (es. `CrashLoopBackOff`, `Evicted`)
 - `ExitCode_<N>` (es. `ExitCode_137`, `ExitCode_1`)
+
+📬 Alerts are sent via Email using smtp. For Gmail smtp use this Environments:
+
+- $env:SMTP_SERVER = "smtp.gmail.com"
+- $env:SMTP_PORT = "587"
+- $env:SMTP_USER = 
+- $env:SMTP_PASS = APPLICATION TOKEN
+- $env:SMTP_FROM = 
+- $env:SMTP_TO = 
+- $env:SMTP_SUBJECT = "[KuBog Alert]"
 
 ---
 
