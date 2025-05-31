@@ -2,33 +2,24 @@
 import os
 import csv
 import argparse
-from datetime import datetime
-from kubernetes import client, config, watch
-from kubernetes.client.rest import ApiException
+import re
 import time
 import json
 import threading
 import pandas as pd
+from datetime import datetime
+from kubernetes import client, config, watch
+from kubernetes.client import CustomObjectsApi
+from kubernetes.client.rest import ApiException
 from collections import defaultdict
 from utility.kube_alerts import KubeAlertManager
-from kubernetes.client.rest import ApiException
 from utility.api_profiler import APIProfiler
 from utility.api_usage_analyzer import run_api_analysis
 from utility.root_cause import RootCauseAnalyzer
 
-# from utility.debugger_safety_patch import (
-#     safe_write_csv,
-#     safe_sort_dataframe,
-#     safe_alert_config,
-#     is_thread_running_for
-# )
-
-
-
 DEFAULT_NAMESPACE = "test"
 INTERVAL_SEC = 60
 OUTPUT_DIR = os.getenv('OUTPUT_DIR', '.')
-
 
 class PodRestartDebugger:
     def __init__(self, args):
@@ -411,11 +402,6 @@ class PodRestartDebugger:
 
     def _start_watcher(self, namespace):
         """Start a watch stream for a namespace with retry logic"""
-        # if namespace in self.watchers:
-        #     return
-
-        # if is_thread_running_for(namespace, self.watchers):
-        #     return
             
         # Initialize resource version if not exists
         if namespace not in self.resource_versions:
@@ -527,7 +513,7 @@ class PodRestartDebugger:
 
     def _parse_mem(self, mem_str):
         """Converte memoria da stringa Kubernetes (es. Mi, Gi, Ki) a MiB float"""
-        import re
+        
 
         units = {
             "Ki": 1 / 1024,
@@ -553,7 +539,7 @@ class PodRestartDebugger:
 
     def _check_nodes(self):
         """Controlla e registra dettagli delle risorse di ogni nodo, inclusi taints e condizioni"""
-        from kubernetes.client import CustomObjectsApi
+        
 
         try:
             nodes = self.api_profiler.profile("list", "nodes", "", lambda: self.v1.list_node())
@@ -685,8 +671,6 @@ class PodRestartDebugger:
 
     def _output_node_status(self, data, node_name):
         """Scrive i dati dei nodi in ./nodes/debug_node_<node>.csv"""
-        import os
-        import csv
 
         node_dir = os.path.join(os.getcwd(), "nodes")
         os.makedirs(node_dir, exist_ok=True)
@@ -861,9 +845,6 @@ def generate_summary_csv(events, args):
     if df.empty:
         print("📭 No restart or deletion events to summarize.")
         return
-
-    # df = safe_sort_dataframe(df, "TotalRestarts")
-
 
     filename = "cluster_overview_chaos.csv" if args.chaos else "workload_overview.csv"
     df.to_csv(filename, index=False)
