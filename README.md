@@ -3,7 +3,7 @@
 
 # 📦 KuBog - Kubernetes Pod Debugger & Alert System
 
-An advanced tool to **monitor**, **analyze**, and **generate alerts** for Pods, Nodes, and API usage in Kubernetes clusters — with dynamic namespace tracking and intelligent reporting.
+An advanced tool to **monitor**, **analyze**, and **generate alerts** for Pods, Nodes, and API usage in Kubernetes clusters — with dynamic namespace tracking and historical reporting.
 
 ---
 
