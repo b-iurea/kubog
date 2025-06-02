@@ -11,7 +11,33 @@ An advanced tool to **monitor**, **analyze**, and **generate alerts** for Pods, 
 
 ```bash
 python3 kubog_v1.py --context <your-context> --chaos --watch --nodes --probes --state-changes --messages --logs
+
 ```
+
+---
+
+## 📈 Workload Historical Data for Smarter Debugging
+
+KuBog is designed with a long-term vision: not just reactive monitoring, but **historical visibility** into your workloads.
+
+We continuously collect key metrics and lifecycle events into organized CSV files, grouped per namespace and workload. This enables:
+
+- 📊 **Post-mortem debugging** of pods, containers, and deployments  
+- 🔁 **Trend analysis** of probe failures, OOM kills, exit codes, etc.  
+- 🧠 **Improved root cause suggestions** based on past behaviors  
+- ⏳ **Time-based filtering** of alerts (e.g., “at least 3 events in 15 minutes”)
+
+Each event is timestamped and saved with contextual information such as:
+
+- Namespace, workload, pod, container
+- Type (e.g. `TERMINATION`, `OOM_KILLED`, `PROBE_FAILURE`)
+- Reason (e.g. `CrashLoopBackOff`)
+- Exit codes
+- Messages and termination logs
+
+This makes KuBog not just a real-time monitor, but also a **persistent observer** of workload health.
+
+
 
 ## 🔍 Main Features
 
